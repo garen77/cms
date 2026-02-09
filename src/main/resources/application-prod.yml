@@ -1,0 +1,32 @@
+# Configurazione per ambiente di PRODUZIONE
+# Per usare: java -jar cms-backend.jar --spring.profiles.active=prod
+# Oppure: export SPRING_PROFILES_ACTIVE=prod && java -jar cms-backend.jar
+
+# IMPORTANTE: Tutte le variabili d'ambiente devono essere configurate sul server!
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate  # IMPORTANTE: validate in prod, non update!
+    show-sql: false  # Non loggare SQL in produzione
+
+media:
+  upload:
+    directory: ${MEDIA_UPLOAD_DIR}
+    base-url: ${MEDIA_BASE_URL}
+
+avatar:
+  upload:
+    directory: ${AVATAR_UPLOAD_DIR}
+    base-url: ${AVATAR_BASE_URL}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+server:
+  port: ${SERVER_PORT:8080}

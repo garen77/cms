@@ -1,0 +1,30 @@
+# Configurazione per ambiente di SVILUPPO
+# Per usare: gradlew bootRun --args='--spring.profiles.active=dev'
+# Oppure: set SPRING_PROFILES_ACTIVE=dev && gradlew bootRun
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cms_db
+    username: postgres
+    password: Qwertyui123!
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+media:
+  upload:
+    directory: ./uploads
+    base-url: http://localhost:8080/api/media
+
+avatar:
+  upload:
+    directory: ./avatars
+    base-url: http://localhost:8080/api/users/avatars
+
+jwt:
+  secret: z7bmKAzWOtOjelu0OTsmPoF9zO+S4Lj/CulHkSppQbmdgfo5zmAa6LYLbYJMCdU4EJbkM67CAvykKuPTP7EpHQ==
+  expiration: 86400000  # 24 ore
+
+server:
+  port: 8080
