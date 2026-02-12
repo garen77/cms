@@ -78,7 +78,7 @@ class MediaController(
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(
                     HttpHeaders.CONTENT_DISPOSITION,
-                    "inline; filename=\"${resource.filename}\""
+                    "inline; filename=\"$filename\""
                 )
                 .body(resource)
 

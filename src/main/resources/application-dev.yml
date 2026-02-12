@@ -12,14 +12,21 @@ spring:
       ddl-auto: update
     show-sql: true
 
+s3:
+  endpoint: s3.eu-central-2.idrivee2.com
+  region: eu-central-2
+  access-key: U8luoJLRrBurwwOWeaNO
+  secret-key: V4msqaMV7sR8UrZ7zefvftNQChnk9LSx5vHVXdDi
+  bucket:
+    media: cms-media
+    avatar: cms-avatars
+
 media:
   upload:
-    directory: ./uploads
     base-url: http://localhost:8080/api/media
 
 avatar:
   upload:
-    directory: ./avatars
     base-url: http://localhost:8080/api/users/avatars
 
 jwt:
@@ -28,3 +35,5 @@ jwt:
 
 server:
   port: 8080
+
+active-profile: ${SPRING_PROFILES_ACTIVE:dev}

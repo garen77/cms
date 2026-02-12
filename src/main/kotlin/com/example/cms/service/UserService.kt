@@ -3,22 +3,23 @@ package com.example.cms.service
 import com.example.cms.model.User
 import com.example.cms.repository.UserRepository
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.Resource
-import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-import java.io.IOException
-import java.nio.file.Files
+import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.*
 import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
 import java.util.*
 
 @Service
 @Transactional
 class UserService(
     private val userRepository: UserRepository,
-    @Value("\${avatar.upload.directory}") private val avatarDirectory: String,
+    private val s3Client: S3Client,
+    @Value("\${s3.bucket.avatar}") private val avatarBucket: String,
     @Value("\${avatar.upload.base-url}") private val avatarBaseUrl: String
 ) {
 
@@ -34,17 +35,6 @@ class UserService(
         private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp")
     }
 
-    init {
-        try {
-            val avatarPath = Paths.get(avatarDirectory)
-            if (!Files.exists(avatarPath)) {
-                Files.createDirectories(avatarPath)
-            }
-        } catch (e: IOException) {
-            throw IllegalStateException("Could not create avatar directory: ${e.message}")
-        }
-    }
-
     /**
      * Upload avatar per l'utente autenticato
      */
@@ -57,8 +47,14 @@ class UserService(
         // Elimina il vecchio avatar se esiste
         user.avatarPath?.let { oldPath ->
             try {
-                Files.deleteIfExists(Paths.get(oldPath))
-            } catch (e: IOException) {
+                // Estrai il filename dall'S3 path (formato: s3://bucket/filename)
+                val oldFilename = oldPath.substringAfterLast("/")
+                val deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(avatarBucket)
+                    .key(oldFilename)
+                    .build()
+                s3Client.deleteObject(deleteObjectRequest)
+            } catch (e: Exception) {
                 // Log ma continua
             }
         }
@@ -68,12 +64,18 @@ class UserService(
         val newFilename = "${user.id}_${UUID.randomUUID()}.$extension"
 
         try {
-            val targetLocation = Paths.get(avatarDirectory).resolve(newFilename)
-            Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
+            val putObjectRequest = PutObjectRequest.builder()
+                .bucket(avatarBucket)
+                .key(newFilename)
+                .contentType(file.contentType)
+                .contentLength(file.size)
+                .build()
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.inputStream, file.size))
 
             // Aggiorna il path dell'avatar nell'utente
             val updatedUser = user.copy(
-                avatarPath = targetLocation.toString(),
+                avatarPath = "/$avatarBucket/$newFilename",
                 updatedAt = java.time.LocalDateTime.now()
             )
 
@@ -81,8 +83,8 @@ class UserService(
 
             return "$avatarBaseUrl/$newFilename"
 
-        } catch (e: IOException) {
-            throw IllegalStateException("Failed to store avatar: ${e.message}")
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to store avatar on S3: ${e.message}")
         }
     }
 
@@ -104,16 +106,16 @@ class UserService(
      */
     fun loadAvatarAsResource(filename: String): Resource {
         try {
-            val filePath = Paths.get(avatarDirectory).resolve(filename).normalize()
-            val resource = UrlResource(filePath.toUri())
+            val getObjectRequest = GetObjectRequest.builder()
+                .bucket(avatarBucket)
+                .key(filename)
+                .build()
 
-            if (resource.exists() && resource.isReadable) {
-                return resource
-            } else {
-                throw IllegalArgumentException("Avatar not found: $filename")
-            }
+            val objectBytes = s3Client.getObject(getObjectRequest).readAllBytes()
+            return ByteArrayResource(objectBytes)
+
         } catch (e: Exception) {
-            throw IllegalArgumentException("Avatar not found: $filename", e)
+            throw IllegalArgumentException("Avatar not found on S3: $filename", e)
         }
     }
 
@@ -126,7 +128,14 @@ class UserService(
 
         user.avatarPath?.let { avatarPath ->
             try {
-                Files.deleteIfExists(Paths.get(avatarPath))
+                // Estrai il filename dall'S3 path (formato: s3://bucket/filename)
+                val filename = avatarPath.substringAfterLast("/")
+                val deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(avatarBucket)
+                    .key(filename)
+                    .build()
+
+                s3Client.deleteObject(deleteObjectRequest)
 
                 val updatedUser = user.copy(
                     avatarPath = null,
@@ -135,8 +144,8 @@ class UserService(
 
                 userRepository.save(updatedUser)
 
-            } catch (e: IOException) {
-                throw IllegalStateException("Failed to delete avatar: ${e.message}")
+            } catch (e: Exception) {
+                throw IllegalStateException("Failed to delete avatar from S3: ${e.message}")
             }
         } ?: throw IllegalArgumentException("User has no avatar")
     }

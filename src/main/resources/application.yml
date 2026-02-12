@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/cms_db}
     username: ${DB_USERNAME:postgres}
@@ -17,14 +19,21 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+s3:
+  endpoint: ${S3_ENDPOINT:s3.eu-central-2.idrivee2.com}
+  region: ${S3_REGION:eu-central-2}
+  access-key: ${S3_ACCESS_KEY:U8luoJLRrBurwwOWeaNO}
+  secret-key: ${S3_SECRET_KEY:V4msqaMV7sR8UrZ7zefvftNQChnk9LSx5vHVXdDi}
+  bucket:
+    media: ${S3_MEDIA_BUCKET:cms-media}
+    avatar: ${S3_AVATAR_BUCKET:cms-avatars}
+
 media:
   upload:
-    directory: ${MEDIA_UPLOAD_DIR:./uploads}
     base-url: ${MEDIA_BASE_URL:http://localhost:8080/api/media}
 
 avatar:
   upload:
-    directory: ${AVATAR_UPLOAD_DIR:./avatars}
     base-url: ${AVATAR_BASE_URL:http://localhost:8080/api/users/avatars}
 
 jwt:
@@ -33,3 +42,5 @@ jwt:
 
 server:
   port: ${SERVER_PORT:8080}
+
+active-profile: ${SPRING_PROFILES_ACTIVE}

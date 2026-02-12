@@ -6,15 +6,14 @@ import com.example.cms.model.Media
 import com.example.cms.repository.MediaRepository
 import com.example.cms.repository.UserRepository
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.Resource
-import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
+import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.*
 import java.util.*
 
 @Service
@@ -22,7 +21,8 @@ import java.util.*
 class MediaService(
     private val mediaRepository: MediaRepository,
     private val userRepository: UserRepository,
-    @Value("\${media.upload.directory}") private val uploadDirectory: String,
+    private val s3Client: S3Client,
+    @Value("\${s3.bucket.media}") private val mediaBucket: String,
     @Value("\${media.upload.base-url}") private val baseUrl: String
 ) {
 
@@ -38,17 +38,6 @@ class MediaService(
         private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp")
     }
 
-    init {
-        try {
-            val uploadPath = Paths.get(uploadDirectory)
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath)
-            }
-        } catch (e: IOException) {
-            throw IllegalStateException("Could not create upload directory: ${e.message}")
-        }
-    }
-
     fun uploadFile(file: MultipartFile, username: String): Media {
         validateFile(file)
 
@@ -60,13 +49,19 @@ class MediaService(
         val newFilename = "${UUID.randomUUID()}.$extension"
 
         try {
-            val targetLocation = Paths.get(uploadDirectory).resolve(newFilename)
-            Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
+            val putObjectRequest = PutObjectRequest.builder()
+                .bucket(mediaBucket)
+                .key(newFilename)
+                .contentType(file.contentType)
+                .contentLength(file.size)
+                .build()
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.inputStream, file.size))
 
             val media = Media(
                 filename = newFilename,
                 originalFilename = originalFilename,
-                filePath = targetLocation.toString(),
+                filePath = "s3://$mediaBucket/$newFilename",
                 fileUrl = "$baseUrl/$newFilename",
                 mimeType = file.contentType,
                 fileSize = file.size,
@@ -75,8 +70,8 @@ class MediaService(
 
             return mediaRepository.save(media)
 
-        } catch (e: IOException) {
-            throw IllegalStateException("Failed to store file: ${e.message}")
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to store file on S3: ${e.message}")
         }
     }
 
@@ -87,16 +82,16 @@ class MediaService(
 
     fun loadFileAsResource(filename: String): Resource {
         try {
-            val filePath = Paths.get(uploadDirectory).resolve(filename).normalize()
-            val resource = UrlResource(filePath.toUri())
+            val getObjectRequest = GetObjectRequest.builder()
+                .bucket(mediaBucket)
+                .key(filename)
+                .build()
 
-            if (resource.exists() && resource.isReadable) {
-                return resource
-            } else {
-                throw IllegalArgumentException("File not found: $filename")
-            }
+            val objectBytes = s3Client.getObject(getObjectRequest).readAllBytes()
+            return ByteArrayResource(objectBytes)
+
         } catch (e: Exception) {
-            throw IllegalArgumentException("File not found: $filename", e)
+            throw IllegalArgumentException("File not found on S3: $filename", e)
         }
     }
 
@@ -108,13 +103,16 @@ class MediaService(
         }
 
         try {
-            val filePath = Paths.get(media.filePath)
-            Files.deleteIfExists(filePath)
+            val deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(mediaBucket)
+                .key(media.filename)
+                .build()
 
+            s3Client.deleteObject(deleteObjectRequest)
             mediaRepository.deleteById(mediaId.toLong())
 
-        } catch (e: IOException) {
-            throw IllegalStateException("Failed to delete file: ${e.message}")
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to delete file from S3: ${e.message}")
         }
     }
 

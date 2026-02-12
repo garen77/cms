@@ -14,14 +14,21 @@ spring:
       ddl-auto: validate  # IMPORTANTE: validate in prod, non update!
     show-sql: false  # Non loggare SQL in produzione
 
+s3:
+  endpoint: ${S3_ENDPOINT}
+  region: ${S3_REGION}
+  access-key: ${S3_ACCESS_KEY}
+  secret-key: ${S3_SECRET_KEY}
+  bucket:
+    media: ${S3_MEDIA_BUCKET}
+    avatar: ${S3_AVATAR_BUCKET}
+
 media:
   upload:
-    directory: ${MEDIA_UPLOAD_DIR}
     base-url: ${MEDIA_BASE_URL}
 
 avatar:
   upload:
-    directory: ${AVATAR_UPLOAD_DIR}
     base-url: ${AVATAR_BASE_URL}
 
 jwt:
@@ -30,3 +37,5 @@ jwt:
 
 server:
   port: ${SERVER_PORT:8080}
+
+active-profile: ${SPRING_PROFILES_ACTIVE}
