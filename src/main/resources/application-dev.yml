@@ -18,8 +18,8 @@ s3:
   access-key: U8luoJLRrBurwwOWeaNO
   secret-key: V4msqaMV7sR8UrZ7zefvftNQChnk9LSx5vHVXdDi
   bucket:
-    media: cms-media
-    avatar: cms-avatars
+    media: ${S3_MEDIA_BUCKET}-dev
+    avatar: ${S3_AVATAR_BUCKET}-dev
 
 media:
   upload:
