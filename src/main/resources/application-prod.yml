@@ -36,6 +36,6 @@ jwt:
   expiration: ${JWT_EXPIRATION:86400000}
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${PORT:${SERVER_PORT:8080}}
 
 active-profile: ${SPRING_PROFILES_ACTIVE}
