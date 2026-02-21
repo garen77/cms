@@ -61,7 +61,7 @@ class MediaService(
             val media = Media(
                 filename = newFilename,
                 originalFilename = originalFilename,
-                filePath = "s3://$mediaBucket/$newFilename",
+                filePath = "/$mediaBucket/$newFilename",
                 fileUrl = "$baseUrl/$newFilename",
                 mimeType = file.contentType,
                 fileSize = file.size,
@@ -162,7 +162,7 @@ class MediaService(
         id = id!!,
         filename = filename,
         originalFilename = originalFilename,
-        fileUrl = fileUrl ?: "",
+        fileUrl = filePath.substringAfterLast("/").let { "$baseUrl/$it" },
         mimeType = mimeType,
         fileSize = fileSize,
         uploadedBy = uploadedBy?.let {
