@@ -40,6 +40,9 @@ jwt:
   secret: ${JWT_SECRET:z7bmKAzWOtOjelu0OTsmPoF9zO+S4Lj/CulHkSppQbmdgfo5zmAa6LYLbYJMCdU4EJbkM67CAvykKuPTP7EpHQ==}
   expiration: ${JWT_EXPIRATION:86400000}
 
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200}
+
 server:
   port: ${PORT:${SERVER_PORT:8080}}
 
