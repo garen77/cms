@@ -35,6 +35,9 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
 
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS:https://cms-frontend-phi-rose.vercel.app,http://localhost:4200}
+
 server:
   port: ${PORT:${SERVER_PORT:8080}}
 

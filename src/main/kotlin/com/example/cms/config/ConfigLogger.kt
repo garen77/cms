@@ -14,7 +14,8 @@ class ConfigLogger(
     @Value("\${jwt.secret}") private val jwtSecret: String,
     @Value("\${s3.endpoint}") private val s3Endpoint: String,
     @Value("\${s3.bucket.media}") private val mediaBucket: String,
-    @Value("\${s3.bucket.avatar}") private val avatarBucket: String
+    @Value("\${s3.bucket.avatar}") private val avatarBucket: String,
+    @Value("\${cors.allowed-origins}") private val corsAllowedOrigins: String
 ) {
 
     private val logger = LoggerFactory.getLogger(ConfigLogger::class.java)
@@ -28,6 +29,7 @@ class ConfigLogger(
         logger.info("S3 Endpoint: $s3Endpoint")
         logger.info("S3 Media Bucket: $mediaBucket")
         logger.info("S3 Avatar Bucket: $avatarBucket")
+        logger.info("CORS Allowed Origins: $corsAllowedOrigins")
         logger.info("===================================")
     }
 }
