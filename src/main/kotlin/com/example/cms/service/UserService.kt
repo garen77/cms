@@ -1,5 +1,6 @@
 package com.example.cms.service
 
+import com.example.cms.dto.UserSummaryResponse
 import com.example.cms.model.User
 import com.example.cms.repository.UserRepository
 import org.springframework.beans.factory.annotation.Value
@@ -156,6 +157,29 @@ class UserService(
     fun getUserByUsername(username: String): User {
         return userRepository.findByUsername(username)
             .orElseThrow { IllegalArgumentException("User not found") }
+    }
+
+    fun searchByUsername(query: String, excludeUsername: String): List<Map<String, Any>> {
+        return userRepository.findByUsernameContainingIgnoreCaseAndUsernameNot(query, excludeUsername)
+            .map { mapOf("id" to it.id!!, "username" to it.username, "email" to it.email) }
+    }
+    /**
+     * Lista tutti gli utenti (senza dati sensibili)
+     */
+    @Transactional(readOnly = true)
+    fun getUsers(): List<UserSummaryResponse> {
+        return userRepository.findAll().map { user ->
+            val avatarUrl = user.avatarPath?.let {
+                val filename = it.substringAfterLast("/")
+                "$avatarBaseUrl/$filename"
+            }
+            UserSummaryResponse(
+                id = user.id,
+                username = user.username,
+                role = user.role.name,
+                avatarUrl = avatarUrl
+            )
+        }
     }
 
     private fun validateFile(file: MultipartFile) {

@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(cmd.exe /c \"gradlew.bat compileKotlin 2>&1\")",
+      "Bash(ls:*)",
+      "Bash(gradle --version:*)",
+      "Bash(gradle:*)"
     ]
   }
 }

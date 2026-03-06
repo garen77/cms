@@ -6,6 +6,9 @@ spring:
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:Qwertyui123!}
     driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
   jpa:
     hibernate:
       ddl-auto: ${DB_DDL_AUTO:update}

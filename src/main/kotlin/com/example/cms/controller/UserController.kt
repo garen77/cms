@@ -1,5 +1,6 @@
 package com.example.cms.controller
 
+import com.example.cms.dto.UserSummaryResponse
 import com.example.cms.service.UserService
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
@@ -15,6 +16,21 @@ import org.springframework.web.multipart.MultipartFile
 class UserController(
     private val userService: UserService
 ) {
+
+    @GetMapping
+    fun getUsers(): ResponseEntity<List<UserSummaryResponse>> =
+        ResponseEntity.ok(userService.getUsers())
+
+    /**                                                                                                                                                                                  * Cerca utenti per username (richiede autenticazione)
+     */
+    @GetMapping("/search")
+    fun searchUsers(
+        @RequestParam(defaultValue = "") q: String,
+        authentication: Authentication
+    ): ResponseEntity<List<Map<String, Any>>> {
+        val users = userService.searchByUsername(q, authentication.name)
+        return ResponseEntity.ok(users)
+    }
 
     /**
      * Upload avatar per l'utente autenticato

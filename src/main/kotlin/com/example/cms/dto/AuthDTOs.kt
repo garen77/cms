@@ -46,3 +46,10 @@ data class AuthResponse(
     val role: String,
     val avatarUrl: String?
 )
+
+data class UserSummaryResponse(
+    val id: Int?,
+    val username: String,
+    val role: String,
+    val avatarUrl: String?
+)

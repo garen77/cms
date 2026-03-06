@@ -62,6 +62,8 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/users/avatars/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/users/avatar").authenticated()
                     .requestMatchers(HttpMethod.DELETE, "/api/users/avatar").authenticated()
+                    .requestMatchers("/ws/**").permitAll()
+                    .requestMatchers("/api/chat/**").authenticated()
                     .anyRequest().authenticated()
             }
             .authenticationProvider(authenticationProvider())

@@ -34,6 +34,9 @@ dependencies {
     implementation("software.amazon.awssdk:s3:2.20.26")
     // Dotenv per caricare file .env
     implementation("me.paulschwarz:spring-dotenv:4.0.0")
+    // WebSocket (STOMP) + Redis Pub/Sub
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
 }
