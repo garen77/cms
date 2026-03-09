@@ -26,7 +26,7 @@ class WebSocketConfig(
         val tokenInterceptor = TokenHandshakeInterceptor()
         // SockJS fallback endpoint
         registry.addEndpoint("/ws")
-            .setAllowedOrigins(*origins)
+            .setAllowedOriginPatterns(*origins)
             .addInterceptors(tokenInterceptor)
             .withSockJS()
         // Native WebSocket endpoint
